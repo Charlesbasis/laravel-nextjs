@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { Navbar } from "@/components/Navbar";
+import { Toaster } from "react-hot-toast";
+
 
 export const metadata: Metadata = {
   title: "My Next App",
@@ -14,8 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <h1>Hello World</h1>
-        {/* {children} */}
+        <Toaster />
+        <Navbar />
+        {children}
       </body>
     </html>
   );
