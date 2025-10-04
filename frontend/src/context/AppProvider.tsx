@@ -82,6 +82,7 @@ export const AppProvider = ({
         setAuthToken(null);
         setIsLoading(false);
         toast.success('User Logged Out');
+        router.push('/auth');
     }
 
     return (
