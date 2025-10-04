@@ -1,6 +1,21 @@
+'use client';
+import { myAppHook } from "@/context/AppProvider";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Dashboard  () {
+  
+  const { isLoading, authToken } = myAppHook();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authToken) {
+      router.push('/auth');
+      return;
+    }
+  }, [authToken]);
+  
   return (
     <>
       <div className="container mt-4">

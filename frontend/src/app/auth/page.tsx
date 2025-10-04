@@ -1,6 +1,7 @@
 'use client';
 import { myAppHook } from "@/context/AppProvider";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Auth() {
 
@@ -20,7 +21,16 @@ export default function Auth() {
         password_confirmation: '',
     });
 
-    const { login, register } = myAppHook();
+    const router = useRouter();
+    
+    const { login, register, authToken, isLoading } = myAppHook();
+
+    useEffect(() => {
+        if (authToken) {
+            router.push('/dashboard');
+            return;
+        }
+    }, [authToken, isLoading]);
     
     const handleOnChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
