@@ -1,5 +1,6 @@
 'use client';
 import { Loader } from "@/components/Loader";
+import { API_URL } from "@/utils/utils";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
@@ -15,8 +16,6 @@ interface AppProviderType {
 }
 
 const AppContext = createContext<AppProviderType | undefined>(undefined);
-
-const API_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
 
 export const AppProvider = ({
     children,

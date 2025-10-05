@@ -28,9 +28,12 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'title' => 'required'            
         ]);
+
+        $data['description'] = $request->description;
+        $data['cost'] = $request->cost;
 
         $data['user_id'] = auth()->user()->id;
 

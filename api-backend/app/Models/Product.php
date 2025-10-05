@@ -11,6 +11,6 @@ class Product extends Model
         'description',
         'banner_image',
         'cost',
-        'user_id',
-    ]
+        'user_id'
+    ];
 }

@@ -1,15 +1,19 @@
 'use client';
 import { myAppHook } from "@/context/AppProvider";
+import { API_URL } from "@/utils/utils";
+import axios from "axios";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 
 interface ProductType {
+  id?: number;
   title: string;
-  description: string;
-  cost: number;
-  file: File | null;
-  bannerUrl: string | '';
+  description?: string;
+  cost?: number;
+  file?: string;
+  banner_image?: File | null;
 }
 
 export default function Dashboard() {
@@ -17,12 +21,13 @@ export default function Dashboard() {
   const { isLoading, authToken } = myAppHook();
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [products, setProducts] = useState<ProductType[]>([]);
   const [formData, setFormData] = useState<ProductType>({
     title: '',
     description: '',
     cost: 0,
-    file: null,
-    bannerUrl: '',
+    file: '',
+    banner_image: null
   });
 
   useEffect(() => {
@@ -30,14 +35,15 @@ export default function Dashboard() {
       router.push('/auth');
       return;
     }
+    fetchAllProducts();
   }, [authToken]);
 
   const handleOnChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFormData({
         ...formData,
-        file: e.target.files[0],
-        bannerUrl: URL.createObjectURL(e.target.files[0]),
+        banner_image: e.target.files[0],
+        file: URL.createObjectURL(e.target.files[0]),
       });
     } else {
       setFormData({
@@ -47,9 +53,50 @@ export default function Dashboard() {
     }
   }
 
-  const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(formData);
+
+    try {
+      const response = await axios.post(`${API_URL}/products`, formData, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.status) {
+        toast.success(response.data.message);
+
+        setFormData({
+          title: '',
+          description: '',
+          cost: 0,
+          file: '',
+          banner_image: null
+        });
+
+        if (fileRef.current) {
+          fileRef.current.value = '';
+        }
+      }
+      console.log(response);
+    } catch (error) {
+
+    }
+  }
+
+  const fetchAllProducts = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/products`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+      // console.log(response);
+      setProducts(response.data.products);
+    } catch (error) {
+
+    }
   }
 
   return (
@@ -87,12 +134,13 @@ export default function Dashboard() {
                 />
                 <div className="mb-2">
                   {
-                    formData.bannerUrl && (
+                    formData.file && (
                       <Image
-                        src={formData.bannerUrl}
+                        src={formData.file}
                         alt="Preview"
                         id="bannerPreview"
-                        style={{ width: '100px', height: '100px', display: 'none' }}
+                        width={100}
+                        height={100}
                       />
                     )
                   }
@@ -125,30 +173,39 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>Sample Product</td>
-                  <td>
-                    <Image
-                      src="#"
-                      alt="Product"
-                      style={{ width: '50px', height: '50px' }}
-                    />
-                  </td>
-                  <td>$100</td>
-                  <td>
-                    <button
-                      className="btn btn-warning btn-sm me-2"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="btn btn-danger btn-sm"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
+                {products.map((singleProduct, index) => (
+                  <tr>
+                    <td>{singleProduct.id}</td>
+                    <td>{singleProduct.title}</td>
+                    <td>
+                      <Image
+                        src={singleProduct.file}
+                        alt="Product"
+                        width={100}
+                        height={100}
+                      />
+                    </td>
+                    <td>${singleProduct.cost}</td>
+                    <td>
+                      <button
+                        className="btn btn-warning btn-sm me-2"
+                        onClick={() => setFormData({
+                          id: singleProduct.id,
+                          title: singleProduct.title,
+                          description: singleProduct.description,
+                          cost: singleProduct.cost
+                        })}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-danger btn-sm"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
