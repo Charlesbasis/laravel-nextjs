@@ -174,16 +174,19 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {products.map((singleProduct, index) => (
-                  <tr>
+                  <tr key={singleProduct.id}>
                     <td>{singleProduct.id}</td>
                     <td>{singleProduct.title}</td>
                     <td>
+                      {singleProduct.banner_image ? (
                       <Image
-                        src={singleProduct.file}
+                        src={singleProduct.banner_image}
                         alt="Product"
-                        width={100}
-                        height={100}
+                        width={50}
+                        height={50}
                       />
+                      ) : 'No Image'
+                      }
                     </td>
                     <td>${singleProduct.cost}</td>
                     <td>

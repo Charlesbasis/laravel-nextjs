@@ -15,7 +15,10 @@ class ProductController extends Controller
     {
         $user_id = auth()->user()->id;
 
-        $products = Product::where('user_id', $user_id)->get();
+        $products = Product::where('user_id', $user_id)->get()->map(function($product){
+            $product->banner_image = $product->banner_image ? asset('storage/'.$product->banner_image) : null;
+            return $product;
+        });
 
         return response()->json([
             'status' => true,
