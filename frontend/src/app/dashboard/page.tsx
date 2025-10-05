@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import Swal from "sweetalert2";
 
 interface ProductType {
   id?: number;
@@ -22,6 +23,7 @@ export default function Dashboard() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [products, setProducts] = useState<ProductType[]>([]);
+  const [isEdit, setIsEdit] = useState(false);
   const [formData, setFormData] = useState<ProductType>({
     title: '',
     description: '',
@@ -53,38 +55,6 @@ export default function Dashboard() {
     }
   }
 
-  const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.post(`${API_URL}/products`, formData, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      if (response.data.status) {
-        toast.success(response.data.message);
-
-        setFormData({
-          title: '',
-          description: '',
-          cost: 0,
-          file: '',
-          banner_image: null
-        });
-
-        if (fileRef.current) {
-          fileRef.current.value = '';
-        }
-      }
-      console.log(response);
-    } catch (error) {
-
-    }
-  }
-
   const fetchAllProducts = async () => {
     try {
       const response = await axios.get(`${API_URL}/products`, {
@@ -99,13 +69,99 @@ export default function Dashboard() {
     }
   }
 
+  const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    try {
+      if (isEdit) {
+        const response = await axios.post(`${API_URL}/products/${formData.id}`, {
+          ...formData,
+          '_method': 'PUT'
+        }, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        toast.success(response.data.message);
+        fetchAllProducts();
+
+      } else {
+        const response = await axios.post(`${API_URL}/products`, formData, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        if (response.data.status) {
+          fetchAllProducts();
+          toast.success(response.data.message);
+
+          setFormData({
+            title: '',
+            description: '',
+            cost: 0,
+            file: '',
+            banner_image: null
+          });
+
+          if (fileRef.current) {
+            fileRef.current.value = '';
+          }
+        }
+        console.log(response);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    try {
+      Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!"
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await axios.delete(`${API_URL}/products/${id}`, {
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+              },
+            });
+            if (response.data.status) {
+              toast.success(response.data.message);
+              // Swal.fire({
+              //   title: "Deleted!",
+              //   text: "Your file has been deleted.",
+              //   icon: "success"
+              // });
+              fetchAllProducts();
+            }
+          } catch (error) {
+            console.log(error)
+          }
+        }
+      });
+    } catch (error) {
+
+    }
+  }
+
   return (
     <>
       <div className="container mt-4">
         <div className="row">
           <div className="col-md-6">
             <div className="card p-4">
-              <h4>Add Product</h4>
+              <h4>{isEdit ? 'Edit' : 'Add'} Product</h4>
               <form onSubmit={handleFormSubmit}>
                 <input
                   className="form-control mb-2"
@@ -155,7 +211,7 @@ export default function Dashboard() {
                   className="btn btn-primary"
                   type="submit"
                 >
-                  Add Product
+                  {isEdit ? 'Update' : 'Add'} Product
                 </button>
               </form>
             </div>
@@ -179,12 +235,12 @@ export default function Dashboard() {
                     <td>{singleProduct.title}</td>
                     <td>
                       {singleProduct.banner_image ? (
-                      <Image
-                        src={singleProduct.banner_image}
-                        alt="Product"
-                        width={50}
-                        height={50}
-                      />
+                        <Image
+                          src={singleProduct.banner_image}
+                          alt="Product"
+                          width={50}
+                          height={50}
+                        />
                       ) : 'No Image'
                       }
                     </td>
@@ -192,17 +248,22 @@ export default function Dashboard() {
                     <td>
                       <button
                         className="btn btn-warning btn-sm me-2"
-                        onClick={() => setFormData({
-                          id: singleProduct.id,
-                          title: singleProduct.title,
-                          description: singleProduct.description,
-                          cost: singleProduct.cost
-                        })}
+                        onClick={() => {
+                          setFormData({
+                            id: singleProduct.id,
+                            title: singleProduct.title,
+                            description: singleProduct.description,
+                            cost: singleProduct.cost,
+                            file: singleProduct.banner_image
+                          })
+                          setIsEdit(true)
+                        }}
                       >
                         Edit
                       </button>
                       <button
                         className="btn btn-danger btn-sm"
+                        onClick={() => handleDelete(singleProduct.id)}
                       >
                         Delete
                       </button>

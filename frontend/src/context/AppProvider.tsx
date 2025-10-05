@@ -23,7 +23,7 @@ export const AppProvider = ({
 
     const [isLoading, setIsLoading] = useState(true);
     const [authToken, setAuthToken] = useState<string | null>(null);
-    const router  = useRouter();
+    const router = useRouter();
 
     useEffect(() => {
         const token = Cookies.get('authToken');
@@ -43,7 +43,7 @@ export const AppProvider = ({
                 password
             });
 
-            if (response.data.status){
+            if (response.data.status) {
                 Cookies.set('authToken', response.data.token, { expires: 7 });
                 toast.success('Login Successful');
                 setAuthToken(response.data.token);
@@ -68,7 +68,7 @@ export const AppProvider = ({
                 password,
                 password_confirmation
             });
-            console.log(response);
+            toast.success(response.data.message);
         } catch (error) {
 
         } finally {

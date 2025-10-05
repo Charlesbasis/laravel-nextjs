@@ -57,6 +57,13 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
+        if ($product->user_id !== auth()->id()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+        
         return response()->json([
             'status' => true,
             'message' => 'Product Data Found',
@@ -69,9 +76,12 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        $request->validate([
+        $data = $request->validate([
             'title' => 'required'
         ]);
+
+        $data['description'] = isset($request->description) ? $request->description : $product->description;
+        $data['cost'] = isset($request->cost) ? $request->cost : $product->cost;
 
         if ($request->hasFile('banner_image')) {
             if ($product->banner_image) {
